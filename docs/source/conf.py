@@ -57,7 +57,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'Tavern'
+project = 'tavern'
 copyright = '2017, Michael Boulton'
 author = 'Michael Boulton'
 
@@ -152,7 +152,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'Tavern.tex', 'Tavern Documentation',
+    (master_doc, 'tavern.tex', 'tavern Documentation',
      'Michael Boulton', 'manual'),
 ]
 
@@ -162,7 +162,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'tavern', 'Tavern Documentation',
+    (master_doc, 'tavern', 'tavern Documentation',
      [author], 1)
 ]
 
@@ -173,8 +173,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'Tavern', 'Tavern Documentation',
-     author, 'Tavern', 'One line description of project.',
+    (master_doc, 'tavern', 'tavern Documentation',
+     author, 'tavern', 'One line description of project.',
      'Miscellaneous'),
 ]
 

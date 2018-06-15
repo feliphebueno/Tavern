@@ -1,0 +1,114 @@
+test_name: Testes dos end-points do namespace v1/setting/entity/department/{department_id}/rules/label/
+
+stages:
+  - name: Tentando alterar o label de um department, com o conteúdo do body vazio
+    request:
+      url: "{tavern.env_vars.URL_API:s}/v1/setting/entity/department/4863520221804954100/rules/label/"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {tavern.env_vars.USER_TOKEN:s}"
+        content-type: "application/json"
+        Content-Checksum: "bf21a9e8fbc5a3846fb05b4fa0859e0917b2202f"
+      json:
+        {}
+    response:
+      status_code: 400
+      body:
+        {}
+      save:
+        body:
+          info: data.ProtokolAPI
+
+  - name: Tentando alterar o label de um department, omitindo o header Content-Checksum
+    request:
+      url: "{tavern.env_vars.URL_API:s}/v1/setting/entity/department/4863520221804954100/rules/label/"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {tavern.env_vars.USER_TOKEN:s}"
+        content-type: "application/json"
+      json:
+        name: ""
+    response:
+      status_code: 400
+      body:
+        {}
+
+  - name: Tentando alterar o label de um department, com o conteúdo da variável do payload vazio
+    request:
+      url: "{tavern.env_vars.URL_API:s}/v1/setting/entity/department/4863520221804954100/rules/label/"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {tavern.env_vars.USER_TOKEN:s}"
+        content-type: "application/json"
+        Content-Checksum: "81f777428f6c1fa5dff73fed0f1dba8b7e317fc5"
+      json:
+        name:
+          ""
+    response:
+      status_code: 406
+      body:
+        {}
+
+  - name: Tentando alterar o label de um department, com o nome contendo ao menos 1 caractere não-alfanumérico.
+    request:
+      url: "{tavern.env_vars.URL_API:s}/v1/setting/entity/department/4863520221804954100/rules/label/"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {tavern.env_vars.USER_TOKEN:s}"
+        content-type: "application/json"
+        Content-Checksum: "67db7b0f7c07aaab9e8909140f397e2bdc8048d9"
+      json:
+        name:
+          "Label %"
+    response:
+      status_code: 406
+      body:
+        {}
+
+  - name: Tentando alterar o label de um department, com o nome menor que 3 caracteres
+    request:
+      url: "{tavern.env_vars.URL_API:s}/v1/setting/entity/department/4863520221804954100/rules/label/"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {tavern.env_vars.USER_TOKEN:s}"
+        content-type: "application/json"
+        Content-Checksum: "3f1c1c096a89257fa4999e2f70aa0c741173d4c7"
+      json:
+        name:
+          "ab"
+    response:
+      status_code: 406
+      body:
+        {}
+
+  - name: Tentando alterar o label de um department, com o nome maior que 30 caracteres
+    request:
+      url: "{tavern.env_vars.URL_API:s}/v1/setting/entity/department/4863520221804954100/rules/label/"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {tavern.env_vars.USER_TOKEN:s}"
+        content-type: "application/json"
+        Content-Checksum: "acd80900833fd01b8af603e287d036dcc0587fe5"
+      json:
+        name:
+          "abcdefghijklmnopqrstuvxyz012345"
+    response:
+      status_code: 406
+      body:
+        {}
+
+  - name: Alterarndo o label de um department corretamente
+    request:
+      url: "{tavern.env_vars.URL_API:s}/v1/setting/entity/department/4863520221804954100/rules/label/"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {tavern.env_vars.USER_TOKEN:s}"
+        content-type: "application/json"
+        Content-Checksum: "9c00a29cce95e4932bdbb281041319932db533d4"
+      json:
+        name:
+          "Label 1"
+    response:
+      status_code: 204
+      body:
+        {}

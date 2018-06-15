@@ -1,0 +1,29 @@
+"""
+Project's entry-point
+"""
+import logging.config
+import os
+import json
+import yaml
+
+from tavern.core import run
+
+token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1MjkwMjQwMzMsImlzcyI6Ik9ueXhwcmV2IiwiZXhwIjoxNTI5MDY3MjMzLCJuYmYiOjE1MjkwMjQwMzIsImRhdGEiOnsiYXBwIjp7ImFwaUlkIjoiODNjYzEyYTVmY2M1IiwiYXBwQ29kIjoxMiwiYXBwT3NDb2QiOjEsIm5hbWUiOiJSZWNhZCIsImFwaWtleSI6IjgzY2MxMmE1ZmNjNSIsInNlY3VyaXR5IjoiSSIsImxhdW5jaGVySWdub3JlIjoiTiIsImNhY2hlIjoiSSIsInZlcnNpb24iOiIxLjAuMCJ9LCJ1c2VyIjp7InBmQ29kIjoxLCJ1c3VhcmlvQ29kIjoxLCJvcmdhb0NvZCI6MSwib3JnYW9FbnRpZGFkZUNvZCI6MSwicHJpdkNvZCI6Miwic3VwZXJVc3VhcmlvIjoiUyIsIm5vbWUiOiJGZWxpcGhlICdPIFJldGFsaWFkb3InIEJ1ZW5vIiwidXVpZCI6IjQxNDhkOTM4NWUyMTgxMTQzNmMxZDBmNjQ3NjE5MyIsImxvZ2luIjoiMDI0MDE2MjcxNDYiLCJmb3RvIjoiaHR0cHM6XC9cL2FsdDEtc3RvcmFnZS1hbHBoYS5vbnl4ZXJwLmNvbS5iclwvNTg5MmYwZmFjNjA5OGJhNTZkMDBjNmNhY2RlNjAyLnBuZyIsImNlbHVsYXIiOm51bGwsImVtYWlsIjpudWxsLCJ1c2VyLWxlbmd0aCI6OCwicGZpZCI6ImU5NWI2YzAzMmY3YWYyMWRjMjRkM2UxZjYwYTgxMCIsIm9pZCI6IjNhOTVjM2UyNDRlMzkwZTdjYThjZWQ2ZDNhYmMwYiIsIm9laWQiOiIxZTczNDAxYTE3NzE4YmNjYmVlMDUyY2ZiMjNiZDAiLCJmdXNvSG9yYXJpbyI6Ii0zIiwibW9lZGEiOiJicmF6aWxpYW5fcmVhbCIsImlkaW9tYSI6InB0LWJyIiwiZGF0YSI6ImJyYXppbGlhbl9kYXRlX2Zvcm1hdCIsImxhdW5jaGVyIjoiX2JsYW5rIn19fQ.UDugxODDhTgjuwm9jNqpd7jetNDzQ6mBgJOKY9Y3PG0'
+
+# Carrega os JWTs(app and user)
+os.environ.update({
+    "APP_TOKEN": token,
+    "USER_TOKEN": token,
+    "USER_TOKEN_NO_AUTH": token,
+    "URL_API": "https://protokol-api.onyxapis.com"
+})
+
+with open("tests/logging.yaml", "r") as spec_file:
+    settings = yaml.load(spec_file)
+    logging.config.dictConfig(settings)
+
+test_info = run('tests/main.yaml', '')
+pass
+print(json.dumps(test_info))
+
+exit(0)

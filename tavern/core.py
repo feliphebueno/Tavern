@@ -1,12 +1,14 @@
 import logging
 import os
 import io
+from typing import List
 
 import yaml
 
 from contextlib2 import ExitStack
 from box import Box
 
+from tavern.response.rest import RestResponse
 from .util.general import load_global_config
 from .util import exceptions
 from .util.dict_util import format_keys
@@ -22,7 +24,7 @@ from .schemas.files import verify_tests
 logger = logging.getLogger(__name__)
 
 
-def run_test(in_file, test_spec, global_cfg):
+def run_test(in_file, test_spec, global_cfg) -> dict:
     """Run a single tavern test
 
     Note that each tavern test can consist of multiple requests (log in,
@@ -55,10 +57,14 @@ def run_test(in_file, test_spec, global_cfg):
     })
 
     test_block_config["variables"]["tavern"] = tavern_box
+    tests = {
+        'passed': True,
+        'tests': list()
+    }
 
     if not test_spec:
         logger.warning("Empty test block in %s", in_file)
-        return
+        return tests
 
     if test_spec.get("includes"):
         for included in test_spec["includes"]:
@@ -69,7 +75,6 @@ def run_test(in_file, test_spec, global_cfg):
     test_block_name = test_spec["test_name"]
 
     logger.info("Running test : %s", test_block_name)
-
     with ExitStack() as stack:
         sessions = get_extra_sessions(test_spec)
 
@@ -79,21 +84,26 @@ def run_test(in_file, test_spec, global_cfg):
 
         # Run tests in a path in order
         for stage in test_spec["stages"]:
+            fail = False
             name = stage["name"]
+            test_info = {'name': name, 'passed': False, 'expected': None, 'actual': None, 'erros': None}
 
             try:
                 r = get_request_type(stage, test_block_config, sessions)
             except exceptions.MissingFormatError:
                 log_fail(stage, None, None)
-                raise
+                fail = True
+                tests['passed'] = False
 
             tavern_box.update(request_vars=r.request_vars)
 
             try:
                 expected = get_expected(stage, test_block_config, sessions)
+                test_info['expected'] = expected
             except exceptions.TavernException:
                 log_fail(stage, None, None)
-                raise
+                fail = True
+                tests['passed'] = False
 
             delay(stage, "before")
 
@@ -103,24 +113,32 @@ def run_test(in_file, test_spec, global_cfg):
                 response = r.run()
             except exceptions.TavernException:
                 log_fail(stage, None, expected)
-                raise
+                fail = True
+                tests['passed'] = False
 
-            verifiers = get_verifiers(stage, test_block_config, sessions, expected)
+            response_body = dict() if response.text is str() else response.text
+            test_info['actual'] = {'requests': {'status_code': response.status_code, 'body': response_body}}
+
+            verifiers: List[RestResponse] = get_verifiers(stage, test_block_config, sessions, expected)
+            test_info['erros'] = verifiers[0].errors if len(verifiers) > 0 else []
 
             for v in verifiers:
                 try:
                     saved = v.verify(response)
                 except exceptions.TavernException:
                     log_fail(stage, v, expected)
-                    raise
+                    fail = True
+                    tests['passed'] = False
                 else:
                     test_block_config["variables"].update(saved)
 
             log_pass(stage, verifiers)
-
+            test_info['passed'] = (fail is False)
+            tests['tests'].append(test_info)
             tavern_box.pop("request_vars")
             delay(stage, "after")
 
+    return tests
 
 def run(in_file, tavern_global_cfg):
     """Run all tests contained in a file
@@ -146,7 +164,10 @@ def run(in_file, tavern_global_cfg):
         bool: Whether ALL tests passed or not
     """
 
-    passed = True
+    info = {
+        'passed': False,
+        'tests': list()
+    }
 
     global_cfg_paths = tavern_global_cfg
     global_cfg = load_global_config(global_cfg_paths)
@@ -161,13 +182,11 @@ def run(in_file, tavern_global_cfg):
             try:
                 verify_tests(test_spec)
             except exceptions.BadSchemaError:
-                passed = False
+                info['passed'] = False
                 continue
 
             try:
-                run_test(in_file, test_spec, global_cfg)
+                info = run_test(in_file, test_spec, global_cfg)
             except exceptions.TestFailError:
-                passed = False
                 continue
-
-    return passed
+    return info
