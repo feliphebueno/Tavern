@@ -2,6 +2,10 @@ import json
 import traceback
 import logging
 import copy
+from typing import Any
+
+from requests import Response
+
 
 try:
     from urllib.parse import urlparse, parse_qs
@@ -20,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 class RestResponse(BaseResponse):
 
-    def __init__(self, session, name, expected, test_block_config):
+    def __init__(self, session: object, name: Any, expected: Any, test_block_config: Any):
         # pylint: disable=unused-argument
 
         super(RestResponse, self).__init__()
@@ -51,7 +55,7 @@ class RestResponse(BaseResponse):
         else:
             return "<Not run yet>"
 
-    def verify(self, response):
+    def verify(self, response: Response):
         """Verify response against expected values and returns any values that
         we wanted to save for use in future requests
 
@@ -59,7 +63,7 @@ class RestResponse(BaseResponse):
         matching values, validating a schema, etc...
 
         Args:
-            response (requests.Response): response object
+            response (Response): response object
 
         Returns:
             dict: Any saved values
@@ -81,22 +85,27 @@ class RestResponse(BaseResponse):
 
         if response.status_code != self.expected["status_code"]:
             if 400 <= response.status_code < 500:
-                self._adderr("Status code was %s, expected %s:\n%s",
+                self._adderr(
+                    "Status code was %s, expected %s:\n%s",
                     response.status_code, self.expected["status_code"],
                     indent_err_text(json.dumps(body)),
-                    )
+                )
             else:
-                self._adderr("Status code was %s, expected %s",
-                    response.status_code, self.expected["status_code"])
+                self._adderr(
+                    "Status code was %s, expected %s",
+                    response.status_code, self.expected["status_code"]
+                )
 
         if self.validate_function:
             try:
                 self.validate_function(response)
-            except Exception as e: #pylint: disable=broad-except
-                self._adderr("Error calling validate function '%s':\n%s",
+            except Exception as e:  # pylint: disable=broad-except
+                self._adderr(
+                    "Error calling validate function '%s':\n%s",
                     self.validate_function.func,
                     indent_err_text(traceback.format_exc()),
-                    e=e)
+                    e=e
+                 )
 
         # Get any keys to save
         saved = {}
@@ -105,13 +114,15 @@ class RestResponse(BaseResponse):
             redirect_url = response.headers["location"]
         except KeyError as e:
             if "redirect_query_params" in self.expected.get("save", {}):
-                self._adderr("Wanted to save %s, but there was no redirect url in response",
-                    self.expected["save"]["redirect_query_params"], e=e)
+                self._adderr(
+                    "Wanted to save %s, but there was no redirect url in response",
+                    self.expected["save"]["redirect_query_params"], e=e
+                )
             qp_as_dict = {}
         else:
             parsed = urlparse(redirect_url)
             qp = parsed.query
-            qp_as_dict = {i:j[0] for i, j in parse_qs(qp).items()}
+            qp_as_dict = {i: j[0] for i, j in parse_qs(qp).items()}
 
         saved.update(self._save_value("body", body))
         saved.update(self._save_value("headers", response.headers))
@@ -128,11 +139,13 @@ class RestResponse(BaseResponse):
         else:
             try:
                 to_save = wrapped(response)
-            except Exception as e: #pylint: disable=broad-except
-                self._adderr("Error calling save function '%s':\n%s",
+            except Exception as e:  # pylint: disable=broad-except
+                self._adderr(
+                    "Error calling save function '%s':\n%s",
                     wrapped.func,
                     indent_err_text(traceback.format_exc()),
-                    e=e)
+                    e=e
+                )
             else:
                 if isinstance(to_save, dict):
                     saved.update(to_save)
@@ -198,16 +211,17 @@ class RestResponse(BaseResponse):
             return {}
 
         if not to_check:
-            self._adderr("No %s in response (wanted to save %s)",
-                key, expected)
+            self._adderr("No %s in response (wanted to save %s)", key, expected)
         else:
             for save_as, joined_key in expected.items():
                 split_key = joined_key.split(".")
                 try:
                     saved[save_as] = recurse_access_key(to_check, copy.copy(split_key))
                 except (IndexError, KeyError) as e:
-                    self._adderr("Wanted to save '%s' from '%s', but it did not exist in the response",
-                        joined_key, key, e=e)
+                    self._adderr(
+                        "Wanted to save '%s' from '%s', but it did not exist in the response",
+                        joined_key, key, e=e
+                    )
 
         if saved:
             logger.debug("Saved %s for '%s' from response", saved, key)

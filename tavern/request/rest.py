@@ -14,7 +14,7 @@ from box import Box
 
 from tavern.util import exceptions
 from tavern.util.dict_util import format_keys, check_expected_keys
-from tavern.schemas.extensions import get_wrapped_create_function
+from tavern.schemas.extensions import get_wrapped_create_function, get_wrapped_request_function
 
 from .base import BaseRequest
 
@@ -67,17 +67,32 @@ def get_request_args(rspec, test_block_config):
         logger.debug("Using default GET method")
         rspec["method"] = "GET"
 
-    headers = rspec.get("headers")
-    if headers:
-        if "content-type" not in [h.lower() for h in headers.keys()]:
-            rspec["headers"]["content-type"] = "application/json"
-
     fspec = format_keys(rspec, test_block_config["variables"])
 
-    def add_request_args(keys, optional):
+    def add_request_args(keys: list, optional: bool):
+        """
+        Builds the request_args dict
+        :param keys:
+        :param optional:
+        """
         for key in keys:
             try:
-                request_args[key] = fspec[key]
+                if key == 'headers' and key in fspec:
+                    request_args[key] = {'Content-type': "application/json"}
+                    for header_key in fspec[key].keys():
+                        if header_key == '$ext':
+                            ext_func = get_wrapped_request_function(fspec[key]["$ext"])
+                            request_args[key].update(ext_func(fspec, request_args))
+                        elif isinstance(fspec[key][header_key], dict):
+                            ext_func = get_wrapped_request_function(fspec[key][header_key]["$ext"])
+                            request_args[key][header_key] = ext_func(fspec, request_args)
+                        else:
+                            request_args[key][header_key] = fspec[key][header_key]
+                elif '$ext' in fspec[key]:
+                    ext_func = get_wrapped_request_function(fspec[key]["$ext"])
+                    request_args[key] = ext_func(fspec, request_args)
+                else:
+                    request_args[key] = fspec[key]
             except KeyError:
                 if optional or (key in request_args):
                     continue

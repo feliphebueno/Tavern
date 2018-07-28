@@ -45,6 +45,28 @@ def import_ext_function(entrypoint):
     return function
 
 
+def get_wrapped_request_function(ext):
+    """Wraps a ext function with arguments given in the test file
+
+    This is similar to functools.wrap
+
+    Args:
+        ext (dict): $ext function dict with function, extra_args, and
+            extra_kwargs to pass
+
+    Returns:
+        function: Wrapped function
+    """
+    func = import_ext_function(ext["function"])
+
+    @functools.wraps(func)
+    def inner(response, *args, **kwargs):
+        return func(response, *args, **kwargs)
+
+    inner.func = func
+
+    return inner
+
 def get_wrapped_response_function(ext):
     """Wraps a ext function with arguments given in the test file
 

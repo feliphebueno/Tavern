@@ -7,17 +7,18 @@ stages:
       method: PATCH
       headers:
         Authorization: "Bearer {tavern.env_vars.USER_TOKEN:s}"
-        content-type: "application/json"
-        Content-Checksum: "bf21a9e8fbc5a3846fb05b4fa0859e0917b2202f"
+        $ext:
+          function: tests.utils.validators:get_headers
+        Content-Checksum:
+          $ext:
+            function: tests.utils.validators:calc_body_checksum
       json:
-        {}
+          $ext:
+            function: tests.utils.validators:get_body
     response:
       status_code: 404
       body:
         {}
-      save:
-        body:
-          info: data.ProtokolAPI
 
   - name: Tentando alterar o label de um department, omitindo o header Content-Checksum
     request:
@@ -104,7 +105,9 @@ stages:
       headers:
         Authorization: "Bearer {tavern.env_vars.USER_TOKEN:s}"
         content-type: "application/json"
-        Content-Checksum: "9c00a29cce95e4932bdbb281041319932db533d4"
+        Content-Checksum:
+          $ext:
+            function: tests.utils.validators:calc_body_checksum
       json:
         name:
           "Label 1"
