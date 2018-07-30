@@ -1,7 +1,10 @@
+import hashlib
 import json
 import importlib
 import logging
 import re
+from typing import Dict
+
 import jwt
 from box import Box
 
@@ -105,3 +108,31 @@ def validate_regex(response, expression, header=None):
     return {
         "regex": Box(match.groupdict())
     }
+
+def calc_body_checksum_sha1(req_spec: Dict[str, str], parsed_args: Dict[str, str]) -> str:
+    """
+    Calculates the body checksum(SHA1)
+    :param req_spec: Dict[str, str]
+    :param parsed_args: Dict[str, str]
+    :return: str Calculated SHA1 checksum
+    """
+    checksum = str()
+    if 'json' in parsed_args:
+        body = json.dumps(parsed_args['json'])
+        checksum = hashlib.sha1(body.encode()).hexdigest()
+
+    return checksum
+
+def calc_body_checksum_sha256(req_spec: Dict[str, str], parsed_args: Dict[str, str]) -> str:
+    """
+    Calculates the body checksum(256)
+    :param req_spec: Dict[str, str]
+    :param parsed_args: Dict[str, str]
+    :return: str Calculated SHA1 checksum
+    """
+    checksum = str()
+    if 'json' in parsed_args:
+        body = json.dumps(parsed_args['json'])
+        checksum = hashlib.sha1(body.encode()).hexdigest()
+
+    return checksum
