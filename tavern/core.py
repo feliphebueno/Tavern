@@ -165,7 +165,7 @@ def run_test(in_file, test_spec, global_cfg) -> dict:
 
     return tests
 
-def run(in_file: str, tavern_global_cfg=[]) -> dict:
+def run(in_file: str, tavern_global_cfg=[]) -> List[dict]:
     """Run all tests contained in a file
 
     For each test this makes sure it matches the expected schema, then runs it.
@@ -186,10 +186,9 @@ def run(in_file: str, tavern_global_cfg=[]) -> dict:
         tavern_global_cfg (List[str]): file containing Global config for all tests
 
     Returns:
-        bool: Whether ALL tests passed or not
+        List[dict]: Test info
     """
-
-    info = {
+    test_info = {
         'all_passed': False,
         'tests': list(),
         'passed': list(),
@@ -197,12 +196,15 @@ def run(in_file: str, tavern_global_cfg=[]) -> dict:
         'timing': list()
     }
 
+    tests: List[test_info] = list()
+
     global_cfg_paths = tavern_global_cfg
     global_cfg = load_global_config(global_cfg_paths)
 
     with io.open(in_file, "r", encoding="utf-8") as infile:
         # Multiple documents per file => multiple test paths per file
         for test_spec in yaml.load_all(infile, Loader=IncludeLoader):
+            info = test_info.copy()
             if not test_spec:
                 logger.warning("Empty document in input file '%s'", in_file)
                 continue
@@ -211,10 +213,13 @@ def run(in_file: str, tavern_global_cfg=[]) -> dict:
                 verify_tests(test_spec)
             except exceptions.BadSchemaError:
                 info['all_passed'] = False
+                tests.append(info)
                 continue
 
             try:
                 info = run_test(in_file, test_spec, global_cfg)
+                tests.append(info)
             except exceptions.TestFailError:
+                tests.append(info)
                 continue
-    return info
+    return tests
