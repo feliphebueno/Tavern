@@ -2,7 +2,7 @@ import json
 import traceback
 import logging
 import copy
-from typing import Any
+from typing import Any, Iterable
 
 from requests import Response
 
@@ -46,7 +46,13 @@ class RestResponse(BaseResponse):
         self.test_block_config = test_block_config
         self.status_code = None
 
-        if self.expected["status_code"] not in _codes:
+        expected_status_code = list()
+        if isinstance(_codes, Iterable):
+            expected_status_code.extend(_codes)
+        else:
+            expected_status_code.append(_codes)
+
+        if self.expected["status_code"] not in expected_status_code:
             logger.warning("Unexpected status code '%s'", self.expected["status_code"])
 
     def __str__(self):
@@ -83,7 +89,14 @@ class RestResponse(BaseResponse):
         except ValueError:
             body = None
 
-        if response.status_code != self.expected["status_code"]:
+        expected_status_code = list()
+        if isinstance(self.expected["status_code"], Iterable):
+            expected_status_code.extend(self.expected["status_code"])
+        else:
+            expected_status_code.append(self.expected["status_code"])
+
+
+        if response.status_code not in expected_status_code:
             if 400 <= response.status_code < 500:
                 self._adderr(
                     "Status code was %s, expected %s:\n%s",
