@@ -144,7 +144,7 @@ def run_test(in_file, test_spec, global_cfg) -> dict:
             test_info['passed'] = (fail is False)
             tests['all_passed'] = (test_info['passed'] is tests['all_passed'])
 
-            test_info['time_ms'] = (datetime.now() - start_time).microseconds / 1000
+            test_info['time_ms'] = (datetime.now() - start_time).total_seconds() * 1000
             times.append(test_info['time_ms'])
 
             tests['tests'].append(test_info)
@@ -164,6 +164,7 @@ def run_test(in_file, test_spec, global_cfg) -> dict:
     })
 
     return tests
+
 
 def run(in_file: str, tavern_global_cfg=[]) -> List[dict]:
     """Run all tests contained in a file
