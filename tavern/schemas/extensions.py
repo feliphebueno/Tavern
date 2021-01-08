@@ -57,11 +57,12 @@ def get_wrapped_request_function(ext):
     Returns:
         function: Wrapped function
     """
+    kwargs = ext.get("extra_kwargs") or {}
     func = import_ext_function(ext["function"])
 
     @functools.wraps(func)
-    def inner(response, *args, **kwargs):
-        return func(response, *args, **kwargs)
+    def inner(*args):
+        return func(*args, **kwargs)
 
     inner.func = func
 

@@ -233,7 +233,7 @@ mapping:
             required: false
             mapping:
               status_code:
-                type: int
+                type: any
 
               cookies:
                 type: seq
