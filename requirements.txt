@@ -1,7 +1,7 @@
 pyyaml==6.0.1
 pykwalify==1.7.0
 requests==2.*
-pyjwt==2.8.0
+pyjwt==2.12.0
 python-box==3.4.4
 future==0.18.2
 contextlib2==0.6.0
